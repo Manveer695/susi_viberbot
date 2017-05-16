@@ -2,6 +2,8 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var request = require('request');
+const crypto = require('crypto');
+
 var headerBody = { 
 				 	'cache-control': 'no-cache',
 					'content-type': 'application/json',
@@ -72,85 +74,93 @@ app.post('/postToPublic',function(req, response){
 });
 
 app.post('/', function(req, response) {
-	response.writeHead(200);
-	console.log('hi');
-	// If user sends a message in 1-on-1 chat to the susi public account
-	if(req.body.event === 'message'){
-		// Susi answer to a user message
-		var ans;
-		var request = require("request");
+	const channelSecret = process.env.X_VIBER_AUTH_TOKEN; // Channel secret string
+	const signature = crypto.createHmac('SHA256', channelSecret)
+  					  .update(req.body).digest('hex');
+	console.log(req.header('X-Viber-Content-Signature')+'\n');
+
+	console.log(signature);
+	if(req.header('X-Viber-Content-Signature') === signature){
+		response.writeHead(200);
 		
-		// setting options to request susi bot.
-		var options1 = { 
-					method: 'GET',
-					url: 'http://api.asksusi.com/susi/chat.json',
-					qs: { timezoneOffset: '-330', q: req.body.message.text }
-				};
-				
-		// A request to the Susi bot
-		request(options1, function (error1, response1, body1) {
-  			if (error1) throw new Error(error1);
-  			// answer fetched from susi
-			ans = (JSON.parse(body1)).answers[0].actions[0].expression;
-  			
-			// setting options to request the chat api of viber.
-			var options =   {
-						method: 'POST',	
-						url: 'https://chatapi.viber.com/pa/send_message',
-						headers: headerBody,
-						body: 
-						{
-							receiver: req.body.sender.id,
-							min_api_version: 1,
-							sender: 
-							{
-								name: 'Susi',
-								avatar: 'https://www.google.co.in/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=0ahUKEwirq6TRoYvTAhWMLI8KHSgVCXsQjRwIBw&url=https%3A%2F%2Fjigyasagrover.wordpress.com%2F2016%2F05%2F26%2Floklak-brief-one-googlesummerofcode-fossasia%2F&bvm=bv.151426398,d.c2I&psig=AFQjCNG01WP05rdho79rkRnGvuwTzs8_hA&ust=1491411117179108' 
-							},
-							tracking_data: 'tracking data',
-							type: 'text',
-							text: ans 
-						},
-						json: true 
+		// If user sends a message in 1-on-1 chat to the susi public account
+		if(req.body.event === 'message'){
+			// Susi answer to a user message
+			var ans;
+			var request = require("request");
+			
+			// setting options to request susi bot.
+			var options1 = { 
+						method: 'GET',
+						url: 'http://api.asksusi.com/susi/chat.json',
+						qs: { timezoneOffset: '-330', q: req.body.message.text }
 					};
-			// request to the chat api of viber.
+					
+			// A request to the Susi bot
+			request(options1, function (error1, response1, body1) {
+	  			if (error1) throw new Error(error1);
+	  			// answer fetched from susi
+				ans = (JSON.parse(body1)).answers[0].actions[0].expression;
+	  			
+				// setting options to request the chat api of viber.
+				var options =   {
+							method: 'POST',	
+							url: 'https://chatapi.viber.com/pa/send_message',
+							headers: headerBody,
+							body: 
+							{
+								receiver: req.body.sender.id,
+								min_api_version: 1,
+								sender: 
+								{
+									name: 'Susi',
+									avatar: 'https://www.google.co.in/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=0ahUKEwirq6TRoYvTAhWMLI8KHSgVCXsQjRwIBw&url=https%3A%2F%2Fjigyasagrover.wordpress.com%2F2016%2F05%2F26%2Floklak-brief-one-googlesummerofcode-fossasia%2F&bvm=bv.151426398,d.c2I&psig=AFQjCNG01WP05rdho79rkRnGvuwTzs8_hA&ust=1491411117179108' 
+								},
+								tracking_data: 'tracking data',
+								type: 'text',
+								text: ans 
+							},
+							json: true 
+						};
+				// request to the chat api of viber.
+				request(options, function (error, res, body) {
+					if (error) throw new Error(error);
+					console.log(body);
+				});
+			});		
+		}
+	
+		// When user opens 1-on-1 chat with Susi public account
+		else if(req.body.event === 'conversation_started'){
+			// Welcome Message
+			var request = require("request");
+			var options = {
+						method: 'POST',	
+	  					url: 'https://chatapi.viber.com/pa/send_message',
+						headers: headerBody,
+					    body: 
+					    {
+					    	receiver: req.body.user.id,
+					     	min_api_version: 1,
+					    	sender: 
+					    	{
+					    		name: 'Susi',
+					        	avatar: 'https://www.google.co.in/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=0ahUKEwirq6TRoYvTAhWMLI8KHSgVCXsQjRwIBw&url=https%3A%2F%2Fjigyasagrover.wordpress.com%2F2016%2F05%2F26%2Floklak-brief-one-googlesummerofcode-fossasia%2F&bvm=bv.151426398,d.c2I&psig=AFQjCNG01WP05rdho79rkRnGvuwTzs8_hA&ust=1491411117179108' 
+					    	},
+				     		tracking_data: 'tracking data',
+				     		type: 'text',
+				     		text: 'Hi from your favourite, Susi!, '+req.body.user.name+'.\n\nThanks for stopping by :)!\n\nLook at this link - http://susi-server.readthedocs.io/en/latest/tutorial/AskSUSI.html, to know what all I can do for you!' 
+					   	},
+					  	json: true 
+					};
+
 			request(options, function (error, res, body) {
 				if (error) throw new Error(error);
 				console.log(body);
 			});
-		});		
+		}
+		response.end();
 	}
-	
-	// When user opens 1-on-1 chat with Susi public account
-	else if(req.body.event === 'conversation_started'){
-		// Welcome Message
-		var request = require("request");
-		var options = {
-					method: 'POST',	
-  					url: 'https://chatapi.viber.com/pa/send_message',
-					headers: headerBody,
-				    body: 
-				    {
-				    	receiver: req.body.user.id,
-				     	min_api_version: 1,
-				    	sender: 
-				    	{
-				    		name: 'Susi',
-				        	avatar: 'https://www.google.co.in/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=0ahUKEwirq6TRoYvTAhWMLI8KHSgVCXsQjRwIBw&url=https%3A%2F%2Fjigyasagrover.wordpress.com%2F2016%2F05%2F26%2Floklak-brief-one-googlesummerofcode-fossasia%2F&bvm=bv.151426398,d.c2I&psig=AFQjCNG01WP05rdho79rkRnGvuwTzs8_hA&ust=1491411117179108' 
-				    	},
-			     		tracking_data: 'tracking data',
-			     		type: 'text',
-			     		text: 'Hi from your favourite, Susi!, '+req.body.user.name+'.\n\nThanks for stopping by :)!\n\nLook at this link - http://susi-server.readthedocs.io/en/latest/tutorial/AskSUSI.html, to know what all I can do for you!' 
-				   	},
-				  	json: true 
-				};
-
-		request(options, function (error, res, body) {
-			if (error) throw new Error(error);
-			console.log(body);
-		});
-	}
-	response.end();
 });
 
 app.listen(app.get('port'), function() {
