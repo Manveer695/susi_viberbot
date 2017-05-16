@@ -78,7 +78,8 @@ app.post('/', function(req, response) {
 	const body = JSON.stringify(req.body); // Request body string
 	const signature = crypto.createHmac('SHA256', channelSecret)
   					  .update(body).digest('base64');
-	if(req.get('X-Viber-Content-Signature') === signature){
+	console.log(req.header('X-Viber-Content-Signature'));
+	if(req.header('X-Viber-Content-Signature') === signature){
 		response.writeHead(200);
 		
 		// If user sends a message in 1-on-1 chat to the susi public account
