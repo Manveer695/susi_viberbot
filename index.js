@@ -73,7 +73,7 @@ app.post('/postToPublic',function(req, response){
 
 app.post('/', function(req, response) {
 	response.writeHead(200);
-	
+	console.log('hi');
 	// If user sends a message in 1-on-1 chat to the susi public account
 	if(req.body.event === 'message'){
 		// Susi answer to a user message
