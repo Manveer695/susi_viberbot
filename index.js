@@ -78,7 +78,7 @@ app.post('/', function(req, response) {
 	const body = JSON.stringify(req.body); // Request body string
 	const signature = crypto.createHmac('SHA256', channelSecret)
   					  .update(body).digest('base64');
-	console.log(req.header('X-Viber-Content-Signature'));
+	console.log(req.header('X-Viber-Content-Signature')+'hi');
 	if(req.header('X-Viber-Content-Signature') === signature){
 		response.writeHead(200);
 		
