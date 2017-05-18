@@ -75,9 +75,10 @@ app.post('/postToPublic',function(req, response){
 
 app.post('/', function(req, response) {
 	const channelSecret = process.env.X_VIBER_AUTH_TOKEN; // Channel secret string
-	const signature = crypto.createHmac('SHA256', channelSecret)
+	const signature = crypto.createHmac('sha256', channelSecret)
   					  .update(JSON.stringify(req.body)).digest('hex');
-	console.log(req.header('X-Viber-Content-Signature')+'\n');
+  	console.log(req.body);
+  	console.log(req.header('X-Viber-Content-Signature')+'\n');
 
 	console.log(signature);
 	if(req.header('X-Viber-Content-Signature') === signature){
