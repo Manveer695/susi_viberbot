@@ -74,14 +74,6 @@ app.post('/postToPublic',function(req, response){
 });
 
 app.post('/', function(req, response) {
-	const channelSecret = process.env.X_VIBER_AUTH_TOKEN; // Channel secret string
-	const signature = crypto.createHmac('sha256', channelSecret)
-  					  .update(JSON.stringify(req.body)).digest('hex');
-  	console.log(JSON.stringify(req.body));
-  	console.log(req.header('X-Viber-Content-Signature')+'\n');
-
-	console.log(signature);
-	if(req.header('X-Viber-Content-Signature') === signature){
 		response.writeHead(200);
 		
 		// If user sends a message in 1-on-1 chat to the susi public account
@@ -161,7 +153,6 @@ app.post('/', function(req, response) {
 			});
 		}
 		response.end();
-	}
 });
 
 app.listen(app.get('port'), function() {
